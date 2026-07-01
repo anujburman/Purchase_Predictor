@@ -3,3 +3,4 @@ tensorflow==2.15.0
 numpy==1.26.4
 scikit-learn==1.4.0
 h5py==3.10.0
+pandas==2.2.0

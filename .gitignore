@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.env
+customer_data.csv
+X_train.npy
+X_test.npy
+y_train.npy
+y_test.npy
+*.ipynb_checkpoints/

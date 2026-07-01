@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
-model = load_model("lstm_model.h5")
+model = load_model("lstm_model.keras")
 with open("scaler.pkl", "rb") as f:
     scaler = pickle.load(f)
 

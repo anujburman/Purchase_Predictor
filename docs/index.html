@@ -14,9 +14,10 @@
     --red: #ef4444; --red-dim: rgba(239,68,68,0.12);
     --text: #e8e8f0; --text-dim: #7070a0;
     --mono: 'JetBrains Mono', monospace; --sans: 'Inter', sans-serif;
+    --row-h: 36px;
   }
   body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 2rem 1rem; }
-  .container { max-width: 860px; margin: 0 auto; }
+  .container { max-width: 900px; margin: 0 auto; }
   .header { text-align: center; margin-bottom: 3rem; }
   .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; margin-bottom: 1rem; }
   h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 0.75rem; }
@@ -32,18 +33,39 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
   .card-body { padding: 1.5rem; }
   .days-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 1rem; text-transform: uppercase; }
-  .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 1.75rem; }
-  .day-col { display: flex; flex-direction: column; gap: 0.4rem; }
-  .day-tag { font-family: var(--mono); font-size: 10px; color: var(--accent); text-align: center; padding: 3px 0; background: var(--accent-dim); border-radius: 4px; }
-  .day-input { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 12px; padding: 6px 4px; text-align: center; width: 100%; transition: border-color 0.15s; }
-  .day-input:focus { outline: none; border-color: var(--accent); }
-  .feat-labels { margin-bottom: 1.5rem; }
-  .feat-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 0.5rem; margin-bottom: 6px; }
-  .feat-name { font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-align: right; padding-right: 0.5rem; }
-  .feat-bar { height: 1px; background: var(--border); }
   .presets { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .preset-btn { font-family: var(--mono); font-size: 11px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
   .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* THE FIX — grid with label column + 7 day columns */
+  .grid-wrapper { overflow-x: auto; margin-bottom: 1.75rem; }
+  .input-grid {
+    display: grid;
+    grid-template-columns: 130px repeat(7, 1fr);
+    gap: 4px;
+    min-width: 600px;
+  }
+  .grid-header-blank { }
+  .day-tag {
+    font-family: var(--mono); font-size: 10px; color: var(--accent);
+    text-align: center; padding: 5px 0;
+    background: var(--accent-dim); border-radius: 4px;
+    height: var(--row-h); display: flex; align-items: center; justify-content: center;
+  }
+  .feat-label {
+    font-family: var(--mono); font-size: 10px; color: var(--text-dim);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px; height: var(--row-h);
+  }
+  .day-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text);
+    font-family: var(--mono); font-size: 12px;
+    padding: 0 4px; text-align: center; width: 100%;
+    height: var(--row-h); transition: border-color 0.15s;
+  }
+  .day-input:focus { outline: none; border-color: var(--accent); }
+
   .predict-btn { width: 100%; padding: 0.9rem; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--sans); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .predict-btn:hover { opacity: 0.9; }
   .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -91,18 +113,11 @@
         <button class="preset-btn" onclick="loadPreset('low')">👀 Casual Browser</button>
         <button class="preset-btn" onclick="loadPreset('rising')">📈 Rising Interest</button>
       </div>
-      <div style="overflow-x:auto;">
-        <div style="min-width:420px;">
-          <div class="days-grid" id="days-grid"></div>
-        </div>
+
+      <div class="grid-wrapper">
+        <div class="input-grid" id="input-grid"></div>
       </div>
-      <div class="feat-labels">
-        <div class="feat-row"><span class="feat-name">pages_viewed</span><div class="feat-bar"></div></div>
-        <div class="feat-row"><span class="feat-name">time_spent_min</span><div class="feat-bar"></div></div>
-        <div class="feat-row"><span class="feat-name">items_in_cart</span><div class="feat-bar"></div></div>
-        <div class="feat-row"><span class="feat-name">discount_clicked</span><div class="feat-bar"></div></div>
-        <div class="feat-row"><span class="feat-name">returned_visit</span><div class="feat-bar"></div></div>
-      </div>
+
       <button class="predict-btn" id="predict-btn" onclick="predict()">Predict Purchase Intent →</button>
       <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -125,33 +140,57 @@
 
 <script>
 const API = "https://purchase-predictor-nkcx.onrender.com/predict";
+const FEATURES = ["pages_viewed","time_spent_min","items_in_cart","discount_clicked","returned_visit"];
 const PRESETS = {
   high:   [[3,5.2,2,0,1],[4,8.1,3,1,0],[2,3.4,3,0,1],[5,12.0,4,1,1],[3,6.7,4,0,0],[4,9.2,5,1,1],[6,14.3,5,1,1]],
   low:    [[1,1.2,0,0,0],[2,2.1,0,0,1],[1,0.8,0,0,0],[0,0,0,0,0],[1,1.5,0,0,0],[2,1.9,0,0,1],[1,0.5,0,0,0]],
   rising: [[1,2.1,0,0,0],[2,3.5,1,0,0],[2,4.2,1,1,0],[3,5.8,2,0,1],[4,7.3,3,1,0],[5,10.1,4,0,1],[6,13.5,4,1,1]]
 };
+
 function buildGrid(data) {
-  const grid = document.getElementById('days-grid');
+  const grid = document.getElementById('input-grid');
   grid.innerHTML = '';
+
+  // Top-left blank corner
+  const blank = document.createElement('div');
+  blank.className = 'grid-header-blank';
+  grid.appendChild(blank);
+
+  // Day headers
   for (let d = 0; d < 7; d++) {
-    const col = document.createElement('div');
-    col.className = 'day-col';
-    col.innerHTML = `<div class="day-tag">Day ${d+1}</div>`;
-    const vals = data ? data[d] : [2,5,1,0,0];
-    for (let f = 0; f < 5; f++) {
+    const tag = document.createElement('div');
+    tag.className = 'day-tag';
+    tag.textContent = `Day ${d+1}`;
+    grid.appendChild(tag);
+  }
+
+  // Feature rows
+  for (let f = 0; f < 5; f++) {
+    // Feature label
+    const label = document.createElement('div');
+    label.className = 'feat-label';
+    label.textContent = FEATURES[f];
+    grid.appendChild(label);
+
+    // Input cells for each day
+    for (let d = 0; d < 7; d++) {
       const inp = document.createElement('input');
-      inp.type = 'number'; inp.className = 'day-input';
-      inp.value = vals[f]; inp.id = `d${d}f${f}`;
-      col.appendChild(inp);
+      inp.type = 'number';
+      inp.className = 'day-input';
+      inp.value = data ? data[d][f] : 0;
+      inp.id = `d${d}f${f}`;
+      inp.step = f === 1 ? '0.1' : '1';
+      grid.appendChild(inp);
     }
-    grid.appendChild(col);
   }
 }
+
 function loadPreset(name) {
   buildGrid(PRESETS[name]);
   document.getElementById('result').style.display = 'none';
   document.getElementById('error-box').style.display = 'none';
 }
+
 function getSequence() {
   const seq = [];
   for (let d = 0; d < 7; d++) {
@@ -161,6 +200,7 @@ function getSequence() {
   }
   return seq;
 }
+
 async function predict() {
   const btn = document.getElementById('predict-btn');
   const loading = document.getElementById('loading');
@@ -169,9 +209,13 @@ async function predict() {
   const errorBox = document.getElementById('error-box');
   btn.disabled = true; result.style.display = 'none'; errorBox.style.display = 'none';
   loading.style.display = 'block'; loadingText.textContent = 'Sending request...';
-  const t = setTimeout(() => { loadingText.textContent = 'Cold start detected — model initialising (~60s)...'; }, 5000);
+  const t = setTimeout(() => { loadingText.textContent = 'Cold start — model initialising (~60s)...'; }, 5000);
   try {
-    const res = await fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({sequence: getSequence()}) });
+    const res = await fetch(API, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({sequence: getSequence()})
+    });
     const data = await res.json();
     clearTimeout(t); loading.style.display = 'none'; btn.disabled = false;
     const isBuy = data.prediction === 'Yes';
@@ -187,6 +231,7 @@ async function predict() {
     errorBox.textContent = 'Request failed. Server may be starting up — wait 60s and try again.';
   }
 }
+
 buildGrid(PRESETS.high);
 </script>
 </body>

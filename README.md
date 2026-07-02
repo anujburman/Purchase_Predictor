@@ -2,6 +2,11 @@
 
 > Predicts whether a customer will make a purchase in the next 7 days based on their browsing history, using a stacked LSTM neural network.
 
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-orange)
+![Flask](https://img.shields.io/badge/Flask-3.0-green)
+![Docker](https://img.shields.io/badge/Docker-deployed-blue)
+
 ## Live Demo
 **API URL:** https://purchase-predictor-nkcx.onrender.com
 

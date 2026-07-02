@@ -7,6 +7,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 MODEL_PATH  = "lstm_model_server.keras"
 SCALER_PATH = "scaler_server.pkl"
@@ -77,6 +78,7 @@ else:
     print("Loaded existing model.")
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/health", methods=["GET"])
 def health():

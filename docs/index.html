@@ -34,10 +34,19 @@
   .card-body { padding: 1.5rem; }
   .days-label { font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; margin-bottom: 1rem; text-transform: uppercase; }
   .presets { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-  .preset-btn { font-family: var(--mono); font-size: 11px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.15s; }
+  .preset-btn {
+    font-family: var(--mono); font-size: 11px; padding: 6px 14px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-dim);
+    cursor: pointer; transition: all 0.15s;
+  }
   .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* THE FIX — grid with label column + 7 day columns */
+  .preset-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-weight: 500;
+  }
   .grid-wrapper { overflow-x: auto; margin-bottom: 1.75rem; }
   .input-grid {
     display: grid;
@@ -45,12 +54,11 @@
     gap: 4px;
     min-width: 600px;
   }
-  .grid-header-blank { }
   .day-tag {
     font-family: var(--mono); font-size: 10px; color: var(--accent);
-    text-align: center; padding: 5px 0;
-    background: var(--accent-dim); border-radius: 4px;
-    height: var(--row-h); display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 5px 0; background: var(--accent-dim);
+    border-radius: 4px; height: var(--row-h);
+    display: flex; align-items: center; justify-content: center;
   }
   .feat-label {
     font-family: var(--mono); font-size: 10px; color: var(--text-dim);
@@ -65,7 +73,6 @@
     height: var(--row-h); transition: border-color 0.15s;
   }
   .day-input:focus { outline: none; border-color: var(--accent); }
-
   .predict-btn { width: 100%; padding: 0.9rem; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--sans); font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s; }
   .predict-btn:hover { opacity: 0.9; }
   .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -109,9 +116,9 @@
     <div class="card-body">
       <p class="days-label">Load a preset or edit values directly</p>
       <div class="presets">
-        <button class="preset-btn" onclick="loadPreset('high')">🛒 High Intent Buyer</button>
-        <button class="preset-btn" onclick="loadPreset('low')">👀 Casual Browser</button>
-        <button class="preset-btn" onclick="loadPreset('rising')">📈 Rising Interest</button>
+        <button class="preset-btn" id="btn-high" onclick="loadPreset('high', this)">🛒 High Intent Buyer</button>
+        <button class="preset-btn" id="btn-low" onclick="loadPreset('low', this)">👀 Casual Browser</button>
+        <button class="preset-btn" id="btn-rising" onclick="loadPreset('rising', this)">📈 Rising Interest</button>
       </div>
 
       <div class="grid-wrapper">
@@ -150,43 +157,39 @@ const PRESETS = {
 function buildGrid(data) {
   const grid = document.getElementById('input-grid');
   grid.innerHTML = '';
-
-  // Top-left blank corner
   const blank = document.createElement('div');
-  blank.className = 'grid-header-blank';
   grid.appendChild(blank);
-
-  // Day headers
   for (let d = 0; d < 7; d++) {
     const tag = document.createElement('div');
     tag.className = 'day-tag';
     tag.textContent = `Day ${d+1}`;
     grid.appendChild(tag);
   }
-
-  // Feature rows
   for (let f = 0; f < 5; f++) {
-    // Feature label
     const label = document.createElement('div');
     label.className = 'feat-label';
     label.textContent = FEATURES[f];
     grid.appendChild(label);
-
-    // Input cells for each day
     for (let d = 0; d < 7; d++) {
       const inp = document.createElement('input');
-      inp.type = 'number';
-      inp.className = 'day-input';
+      inp.type = 'number'; inp.className = 'day-input';
       inp.value = data ? data[d][f] : 0;
       inp.id = `d${d}f${f}`;
       inp.step = f === 1 ? '0.1' : '1';
+      inp.addEventListener('input', () => clearActivePreset());
       grid.appendChild(inp);
     }
   }
 }
 
-function loadPreset(name) {
+function clearActivePreset() {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+}
+
+function loadPreset(name, btn) {
   buildGrid(PRESETS[name]);
+  clearActivePreset();
+  btn.classList.add('active');
   document.getElementById('result').style.display = 'none';
   document.getElementById('error-box').style.display = 'none';
 }
@@ -232,7 +235,9 @@ async function predict() {
   }
 }
 
+// Load high intent by default and mark it active
 buildGrid(PRESETS.high);
+document.getElementById('btn-high').classList.add('active');
 </script>
 </body>
 </html>
